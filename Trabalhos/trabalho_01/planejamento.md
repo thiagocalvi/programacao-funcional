@@ -74,7 +74,20 @@ lista de lista de strigs
 
 
 
+# TODO
+- Contabilizar os resultados das partidadas
+- Atualizar os dados dos times na tabela de classificação
+- Implementar a ordenação da classificação
 
+ # Ordenação
 
+ ### Ordena por pontos
+ - Recebe a tabela classificação
+ - Compara a quantidade de pontos dos dis primeiros
+ - Ele o que tem mais pontos
 
+ ### Ordena por numero de vitorias
 
+ ### Ordena por saldo de gols
+
+ ### Ordena por ordem alfabetica
