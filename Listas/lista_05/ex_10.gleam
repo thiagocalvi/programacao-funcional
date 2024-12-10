@@ -2,7 +2,7 @@ import sgleam/check
 
 pub fn main() {}
 
-/// Verifica se todos os elmentos de uma *list* são true ou a *lista é vazia*
+/// Verifica se todos os elmentos de uma *lista* são true ou a *lista é vazia*
 /// e retorna True, caso contrario retorna False
 pub fn todos_true(lista: List(Bool)) -> Bool {
     case lista {
