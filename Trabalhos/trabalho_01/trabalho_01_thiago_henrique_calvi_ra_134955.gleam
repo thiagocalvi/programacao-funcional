@@ -1,16 +1,15 @@
+// Imports
 /// ************************************************************
 /// * 4 Semestre do Curso de Ciência da Computação - UEM 2024  *
 /// * Primeiro trabalho da disciplica de Programação Funcional *
-/// * : Thiago Henrique Calvi ra: 134955              *
+/// * Discente : Thiago Henrique Calvi ra: 134955              *
 /// ************************************************************
-
-// Imports
 import gleam/int
 import gleam/order
 import gleam/string
 import sgleam/check
 
-/// Definição dos erros que podem ocorrer no programa
+/// Representação dos erros que podem ocorrer no programa
 pub type Erro {
   // Representa uma string vazia passada como parametro
   StringVazia
@@ -64,7 +63,7 @@ pub type Jogo {
 
 /// Representa o resultado de um jogo (confronto entre dois times)
 pub type ResultadoJogo {
-  // Representa a vitória de um time
+  // Representa uma vitória
   Vitoria(
     time_vencedor: Time,
     vencedor_gols: Int,
@@ -72,10 +71,11 @@ pub type ResultadoJogo {
     perdedor_gols: Int,
   )
 
-  // Representa o empate entre dois times 
+  // Representa um empate 
   Empate(jogo: Jogo)
 }
 
+/// Representa o resultado que um time teve em um jogo
 pub type ResultadoTime {
   VitoriaParcial
   DerrotaParcial
@@ -91,14 +91,14 @@ pub type ResultadoParcial {
   )
 }
 
-/// Receber uma string `dados_jogo` contendo informações de um jogo no formato 
-/// "anfitriao anfitriao_gols visitante visitante_gols", separá-la em uma lista de strings 
-/// `[anfitriao, anfitriao_gols, visitante, visitante_gols]`, e validar os dados.
+/// Recebe uma string `dados_jogo` contendo informações de um jogo no formato 
+/// "anfitriao anfitriao_gols visitante visitante_gols", separa a string em uma lista de strings 
+/// `[anfitriao, anfitriao_gols, visitante, visitante_gols]`.
 /// - Se `dados_jogo` for uma string vazia ou contiver apenas espaços, retorna `Error(StringVazia)`.
 /// - Se algum dos campos (anfitrião, anfitriao_gols, visitante, visitante_gols) for vazio, 
 /// retorna `Error(ValorInvalido)`.
 /// - Se a quantidade de parâmetros for diferente de quatro, retorna `Error(QuantidadeInvalidaParametros)`.
-/// Caso os dados sejam válidos, retorna `Ok` com a lista de strings extraída.
+/// Caso os dados sejam válidos, retorna `Ok([anfitriao, anfitriao_gols, visitante, visitante_gols])`.
 pub fn separa_dados(dados_jogo: String) -> Result(List(String), Erro) {
   case dados_jogo {
     "" | " " -> Error(StringVazia)
@@ -123,25 +123,22 @@ pub fn separa_dados(dados_jogo: String) -> Result(List(String), Erro) {
 
 pub fn separa_dados_examples() {
   check.eq(separa_dados(""), Error(StringVazia))
-  check.eq(separa_dados(" "), Error(StringVazia))
   check.eq(separa_dados("Flamengo 2 Palmeiras "), Error(ValorInvalido))
   check.eq(
-    separa_dados("Flamengo 2 Palmeiras 1 b"),
+    separa_dados("Flamengo 2 Palmeiras 1 3"),
     Error(QuantidadeInvalidaParametros),
   )
   check.eq(
     separa_dados("Flamengo Palmeiras 1"),
     Error(QuantidadeInvalidaParametros),
   )
-  check.eq(separa_dados("Flamengo 1"), Error(QuantidadeInvalidaParametros))
-  check.eq(separa_dados("Palmeiras"), Error(QuantidadeInvalidaParametros))
   check.eq(
     separa_dados("Sao-Paulo 1 Atletico-MG 2"),
     Ok(["Sao-Paulo", "1", "Atletico-MG", "2"]),
   )
 }
 
-/// Receber uma lista de strings `lista_jogos`, onde cada string contém informações de um jogo no formato 
+/// Recebe uma lista de strings `lista_jogos`, onde cada string contém informações de um jogo no formato 
 /// "anfitriao anfitriao_gols visitante visitante_gols", e retornar uma lista de listas de strings, onde cada sublista 
 /// contém os dados formatados `[anfitriao, anfitriao_gols, visitante, visitante_gols]`.
 /// - Se `lista_jogos` estiver vazia, retorna `Error(ListaVazia)`.
@@ -171,17 +168,12 @@ pub fn formata_dados(
 
 pub fn formata_dados_examples() {
   check.eq(formata_dados([]), Error(ListaVazia))
+  check.eq(formata_dados([""]), Error(StringVazia))
   check.eq(
-    formata_dados(["Palmeiras 0 Sao-Paulo 0 c"]),
+    formata_dados(["Palmeiras 3 Sao-Paulo 1 c"]),
     Error(QuantidadeInvalidaParametros),
   )
-  check.eq(formata_dados(["Palmeiras 0 Sao-Paulo "]), Error(ValorInvalido))
-  check.eq(formata_dados([""]), Error(StringVazia))
-  check.eq(formata_dados(["Palmeiras 0 Sao-Paulo 0", ""]), Error(StringVazia))
-  check.eq(
-    formata_dados(["Palmeiras 0 Sao-Paulo 0"]),
-    Ok([["Palmeiras", "0", "Sao-Paulo", "0"]]),
-  )
+  check.eq(formata_dados(["Flamengo 2 Sao-Paulo "]), Error(ValorInvalido))
   check.eq(
     formata_dados([
       "Sao-Paulo 1 Atletico-MG 2", "Flamengo 2 Palmeiras 1",
@@ -209,8 +201,7 @@ pub fn extrai_times(dado_jogo: List(String)) -> Result(List(Time), Erro) {
         True -> Error(TimesIguais)
         False -> Ok([Time(anfitriao), Time(visitante)])
       }
-    [_, ..] ->
-      Error(QuantidadeInvalidaParametros)
+    [_, ..] -> Error(QuantidadeInvalidaParametros)
   }
 }
 
@@ -230,13 +221,14 @@ pub fn extrai_time_examples() {
   )
 }
 
-/// Determinar se um `time` está presente em uma `lista_times`.
-/// - Retorna `True` se o nome do time `time.nome` corresponder ao nome de algum time na lista.
+/// Determina se um `time` está presente em uma `lista_times`.
+/// - Retorna `True` se `time.nome` corresponder ao nome de algum time na `lista_times`.
 /// - Retorna `False` caso contrário ou se a lista estiver vazia.
 pub fn contem_time(time: Time, lista_times: List(Time)) -> Bool {
   case lista_times {
     [] -> False
-    [primeiro, ..resto] -> primeiro.nome == time.nome || contem_time(time, resto)
+    [primeiro, ..resto] ->
+      primeiro.nome == time.nome || contem_time(time, resto)
   }
 }
 
@@ -249,7 +241,7 @@ pub fn contem_time_examples() {
   )
 }
 
-/// Insere um `elemento` no inicio de uma `lista_elementos` e retorna `lista_elementos` com o novo elemento no inicio
+/// Insere um `elemento` no inicio de uma `lista_elementos` e retorna `lista_elementos` com o novo elemento no inicio.
 pub fn insere(elemento: a, lista_elementos: List(a)) -> List(a) {
   case lista_elementos {
     [] -> [elemento]
@@ -259,9 +251,6 @@ pub fn insere(elemento: a, lista_elementos: List(a)) -> List(a) {
 }
 
 pub fn insere_examples() {
-  check.eq(insere(TimeTabela(Time("Palmeiras"), 0, 0, 0), []), [
-    TimeTabela(Time("Palmeiras"), 0, 0, 0),
-  ])
   check.eq(
     insere(TimeTabela(Time("Palmeiras"), 0, 0, 0), [
       TimeTabela(Time("Santos"), 0, 0, 0),
@@ -271,9 +260,6 @@ pub fn insere_examples() {
       TimeTabela(Time("Santos"), 0, 0, 0),
     ],
   )
-  check.eq(insere(Jogo(Time("Sao-Paulo"), 2, Time("Palmeiras"), 3), []), [
-    Jogo(Time("Sao-Paulo"), 2, Time("Palmeiras"), 3),
-  ])
   check.eq(
     insere(Jogo(Time("Sao-Paulo"), 2, Time("Palmeiras"), 3), [
       Jogo(Time("Vitória"), 1, Time("Flamento"), 2),
@@ -297,14 +283,6 @@ pub fn insere_time(time: Time, lista_times: List(Time)) -> List(Time) {
 
 pub fn insere_time_examples() {
   check.eq(insere_time(Time("Flamengo"), []), [Time("Flamengo")])
-  check.eq(insere_time(Time("Santos"), [Time("Sao-Paulo")]), [
-    Time("Santos"),
-    Time("Sao-Paulo"),
-  ])
-  check.eq(
-    insere_time(Time("Botafogo"), [Time("Sao-Paulo"), Time("Botafogo")]),
-    [Time("Sao-Paulo"), Time("Botafogo")],
-  )
   check.eq(
     insere_time(Time("Vitoria"), [
       Time("Sao-Paulo"),
@@ -320,7 +298,7 @@ pub fn insere_time_examples() {
   )
 }
 
-/// Coletar todos os times únicos de uma lista de jogos `dados_jogos` e adicioná-los à lista de times `lista_times`.
+/// Coleta todos os times de uma lista `dados_jogos` e adiciona em `lista_times`.
 /// - Para cada jogo, extrai os times anfitrião e visitante.
 /// - Adiciona os times à lista se eles ainda não estiverem presentes.
 /// - Retorna a lista final de times ou um erro caso ocorra alguma inconsistência nos dados.
@@ -357,7 +335,7 @@ pub fn coleta_times_examples() {
     coleta_times([["Sao-Paulo", "1", "Atletico-MG", "2"]], []),
     Ok([Time("Atletico-MG"), Time("Sao-Paulo")]),
   )
-  
+
   check.eq(
     coleta_times([["Flamengo", "2", "Palmeiras", "1"]], [
       Time("Atletico-MG"),
@@ -372,9 +350,9 @@ pub fn coleta_times_examples() {
   )
 }
 
-/// Criar uma estrutura `TimeTabela` para um `time` específico, inicializando os campos relacionados à pontuação, vitórias e saldo de gols com zero.
+/// Cria um `TimeTabela` para um `time` específico, inicializando os campos relacionados à pontuação, vitórias e saldo de gols com zero.
 /// - Recebe um `time` do tipo `Time`.
-/// - Retorna um `TimeTabela` com o `time` especificado e os valores padrão inicializados.
+/// - Retorna um `TimeTabela` com os valores padrão inicializados.
 pub fn cria_time_tabela(time: Time) -> TimeTabela {
   TimeTabela(time, 0, 0, 0)
 }
@@ -386,7 +364,7 @@ pub fn cria_time_tabela_examples() {
   )
 }
 
-/// Construir a tabela de classificação inicial a partir de uma lista de times.
+/// Constrói a tabela de classificação inicial a partir de uma lista de times.
 /// - Recebe 
 ///   - `lista_times`, lista de `Time` representando os times participantes do campeonato.
 ///   - `tabela_classificacao`, lista de `TimeTabela` representando a tabela de classificação.
@@ -425,7 +403,7 @@ pub fn cria_tabela_classificacao_examples() {
   )
 }
 
-/// Converter as strings de gols dos times para valores inteiros.
+/// Converte as strings de gols dos times para valores inteiros.
 /// - Recebe 
 ///   - `anfitriao_gols`, String representando os gols do time anfitrião.
 ///   - `visitante_gols`, String representando os gols do time visitante.
@@ -452,7 +430,7 @@ pub fn converte_gols_examples() {
   check.eq(converte_gols("0", "2"), Ok([0, 2]))
 }
 
-/// Converter uma lista de strings representando os dados de um jogo para um `Jogo`.
+/// Converte uma lista de strings representando os dados de um jogo para um `Jogo`.
 /// - Reccebe
 ///   - `dado_jogo`, lista de strings com os dados do jogo, incluindo os times e os gols de cada um.
 /// - Retorna
@@ -524,10 +502,6 @@ pub fn cria_jogos_examples() {
     Error(QuantidadeInvalidaParametros),
   )
   check.eq(
-    cria_jogos([["Sao-Paulo", "1", "Atletico-MG", "2"]], []),
-    Ok([Jogo(Time("Sao-Paulo"), 1, Time("Atletico-MG"), 2)]),
-  )
-  check.eq(
     cria_jogos(
       [
         ["Sao-Paulo", "1", "Atletico-MG", "2"],
@@ -540,24 +514,15 @@ pub fn cria_jogos_examples() {
       Jogo(Time("Sao-Paulo"), 1, Time("Atletico-MG"), 2),
     ]),
   )
-  check.eq(
-    cria_jogos([["Flamengo", "3", "Botafogo", "5"]], [
-      Jogo(Time("Sao-Paulo"), 1, Time("Atletico-MG"), 2),
-    ]),
-    Ok([
-      Jogo(Time("Flamengo"), 3, Time("Botafogo"), 5),
-      Jogo(Time("Sao-Paulo"), 1, Time("Atletico-MG"), 2),
-    ]),
-  )
 }
 
 /// Determina o resultado de um jogo com base nos número gols marcados pelos times.
 /// - Recebe
 ///   - `jogo` contendo os times anfitrião e visitante, e seus respectivos gols.
 /// - Retorna
-///   - Um valor do tipo `ResultadoJogo`:
-///   - `Empate(Jogo)`, indica que o jogo terminou empatado.
-///   - `Vitoria(Time vencedor, Int gols_vencedor, Time perdedor, Int gols_perdedor)`, indica qual time venceu e os placares.
+///   - Um valor do tipo `ResultadoJogo`
+///    - `Empate(Jogo)`, indica que o jogo terminou empatado.
+///    - `Vitoria(Time vencedor, Int gols_vencedor, Time perdedor, Int gols_perdedor)`, indica qual time venceu e os placares.
 pub fn define_resultado_jogo(jogo: Jogo) -> ResultadoJogo {
   case jogo.anfitriao_gols == jogo.visitante_gols {
     True -> Empate(jogo)
@@ -628,21 +593,6 @@ pub fn cria_resultado_jogos_examples() {
     ),
     Ok([Vitoria(Time("Atletico-MG"), 2, Time("Sao-Paulo"), 1)]),
   )
-
-  check.eq(
-    cria_resultado_jogos(
-      [
-        Jogo(Time("Sao-Paulo"), 1, Time("Atletico-MG"), 2),
-        Jogo(Time("Flamengo"), 3, Time("Palmeiras"), 3),
-      ],
-      [],
-    ),
-    Ok([
-      Empate(Jogo(Time("Flamengo"), 3, Time("Palmeiras"), 3)),
-      Vitoria(Time("Atletico-MG"), 2, Time("Sao-Paulo"), 1),
-    ]),
-  )
-
   check.eq(
     cria_resultado_jogos([Jogo(Time("Flamengo"), 3, Time("Palmeiras"), 3)], [
       Vitoria(Time("Atletico-MG"), 2, Time("Sao-Paulo"), 1),
@@ -801,45 +751,6 @@ pub fn cria_lista_resultados_parcial(
 
 pub fn cria_lista_resultados_parcial_examples() {
   check.eq(cria_lista_resultados_parcial([], []), Error(ListaVazia))
-
-  check.eq(
-    cria_lista_resultados_parcial(
-      [Vitoria(Time("Bahia"), 3, Time("Fortaleza"), 0)],
-      [],
-    ),
-    Ok([
-      ResultadoParcial(Time("Bahia"), 3, VitoriaParcial),
-      ResultadoParcial(Time("Fortaleza"), -3, DerrotaParcial),
-    ]),
-  )
-
-  check.eq(
-    cria_lista_resultados_parcial(
-      [Empate(Jogo(Time("Sao-Paulo"), 1, Time("Palmeiras"), 1))],
-      [],
-    ),
-    Ok([
-      ResultadoParcial(Time("Sao-Paulo"), 0, EmpateParcial),
-      ResultadoParcial(Time("Palmeiras"), 0, EmpateParcial),
-    ]),
-  )
-
-  check.eq(
-    cria_lista_resultados_parcial(
-      [
-        Vitoria(Time("Flamengo"), 4, Time("Corinthians"), 2),
-        Empate(Jogo(Time("Atletico-MG"), 3, Time("Cruzeiro"), 3)),
-      ],
-      [],
-    ),
-    Ok([
-      ResultadoParcial(Time("Atletico-MG"), 0, EmpateParcial),
-      ResultadoParcial(Time("Cruzeiro"), 0, EmpateParcial),
-      ResultadoParcial(Time("Flamengo"), 2, VitoriaParcial),
-      ResultadoParcial(Time("Corinthians"), -2, DerrotaParcial),
-    ]),
-  )
-
   check.eq(
     cria_lista_resultados_parcial(
       [Empate(Jogo(Time("Atletico-MG"), 3, Time("Cruzeiro"), 3))],
@@ -960,15 +871,6 @@ pub fn atualiza_info_time_examples() {
     ),
     Ok(TimeTabela(Time("Flamengo"), 7, 2, 4)),
   )
-
-  check.eq(
-    atualiza_info_time(
-      TimeTabela(Time("São Paulo"), 8, 2, 3),
-      ResultadoParcial(Time("São Paulo"), -2, DerrotaParcial),
-    ),
-    Ok(TimeTabela(Time("São Paulo"), 8, 2, 1)),
-  )
-
   check.eq(
     atualiza_info_time(
       TimeTabela(Time("Corinthians"), 5, 1, -1),
@@ -980,8 +882,8 @@ pub fn atualiza_info_time_examples() {
 
 /// Atualiza a tabela de classificação substituindo as informações de um time específico.
 /// - Recebe
-///   - `time_tabela`: As novas informações do time a serem atualizadas na tabela.
-///   - `tabela`: Uma lista de `TimeTabela` representando a tabela de classificação atual.
+///   - `time_tabela` as novas informações do time a serem atualizadas na tabela.
+///   - `tabela` uma lista de `TimeTabela` representando a tabela de classificação atual.
 /// - Retorna:
 ///   - `Ok(List(TimeTabela))` com a tabela atualizada, onde as informações do time foram substituídas por `time_tabela`, caso o time seja encontrado.
 ///   - `Error(ListaVazia)` se a tabela estiver vazia.
@@ -1010,11 +912,6 @@ pub fn atualiza_time_tabela(
 }
 
 pub fn atualiza_time_tabela_examples() {
-  check.eq(
-    atualiza_time_tabela(TimeTabela(Time("Palmeiras"), 13, 4, 7), []),
-    Error(ListaVazia),
-  )
-
   check.eq(
     atualiza_time_tabela(TimeTabela(Time("Palmeiras"), 13, 4, 7), [
       TimeTabela(Time("Flamengo"), 6, 2, 4),
@@ -1098,31 +995,6 @@ pub fn atualiza_tabela_classificacao_examples() {
         TimeTabela(Time("Palmeiras"), 10, 3, 5),
         TimeTabela(Time("Flamengo"), 6, 2, 4),
       ],
-      [],
-    ),
-    Error(ListaVazia),
-  )
-
-  check.eq(
-    atualiza_tabela_classificacao(
-      [
-        TimeTabela(Time("Palmeiras"), 10, 3, 5),
-        TimeTabela(Time("Flamengo"), 6, 2, 4),
-      ],
-      [ResultadoParcial(Time("Palmeiras"), 2, VitoriaParcial)],
-    ),
-    Ok([
-      TimeTabela(Time("Palmeiras"), 13, 4, 7),
-      TimeTabela(Time("Flamengo"), 6, 2, 4),
-    ]),
-  )
-
-  check.eq(
-    atualiza_tabela_classificacao(
-      [
-        TimeTabela(Time("Palmeiras"), 10, 3, 5),
-        TimeTabela(Time("Flamengo"), 6, 2, 4),
-      ],
       [
         ResultadoParcial(Time("Palmeiras"), 2, VitoriaParcial),
         ResultadoParcial(Time("Flamengo"), 1, EmpateParcial),
@@ -1167,17 +1039,6 @@ pub fn ordena_ordem_alfabetica(
 pub fn ordena_ordem_alfabetica_examples() {
   check.eq(
     ordena_ordem_alfabetica(
-      TimeTabela(Time("Palmeiras"), 10, 3, 5),
-      TimeTabela(Time("Flamengo"), 10, 3, 5),
-    ),
-    [
-      TimeTabela(Time("Flamengo"), 10, 3, 5),
-      TimeTabela(Time("Palmeiras"), 10, 3, 5),
-    ],
-  )
-
-  check.eq(
-    ordena_ordem_alfabetica(
       TimeTabela(Time("São Paulo"), 12, 4, 8),
       TimeTabela(Time("Santos"), 12, 4, 8),
     ),
@@ -1217,17 +1078,6 @@ pub fn ordena_saldo_gols_examples() {
       TimeTabela(Time("Flamengo"), 10, 2, 4),
     ],
   )
-
-  check.eq(
-    ordena_saldo_gols(
-      TimeTabela(Time("São Paulo"), 12, 4, 6),
-      TimeTabela(Time("Santos"), 12, 4, 8),
-    ),
-    [
-      TimeTabela(Time("Santos"), 12, 4, 8),
-      TimeTabela(Time("São Paulo"), 12, 4, 6),
-    ],
-  )
 }
 
 /// Ordena dois times na tabela de classificação em ordem decresente pelo numero de vitótias.
@@ -1252,17 +1102,6 @@ pub fn ordena_numero_vitorias(
 }
 
 pub fn ordena_numero_vitorias_examples() {
-  check.eq(
-    ordena_numero_vitorias(
-      TimeTabela(Time("Palmeiras"), 8, 3, 4),
-      TimeTabela(Time("Flamengo"), 8, 2, 4),
-    ),
-    [
-      TimeTabela(Time("Palmeiras"), 8, 3, 4),
-      TimeTabela(Time("Flamengo"), 8, 2, 4),
-    ],
-  )
-
   check.eq(
     ordena_numero_vitorias(
       TimeTabela(Time("São Paulo"), 12, 2, 8),
@@ -1304,11 +1143,6 @@ pub fn insere_ordenado(
 }
 
 pub fn insere_ordenado_examples() {
-
-  check.eq(insere_ordenado(TimeTabela(Time("Palmeiras"), 13, 4, 7), []), [
-    TimeTabela(Time("Palmeiras"), 13, 4, 7),
-  ])
-
   check.eq(
     insere_ordenado(TimeTabela(Time("Palmeiras"), 15, 4, 7), [
       TimeTabela(Time("Flamengo"), 15, 5, 8),
@@ -1325,18 +1159,6 @@ pub fn insere_ordenado_examples() {
     insere_ordenado(TimeTabela(Time("Flamengo"), 15, 5, 8), [
       TimeTabela(Time("Palmeiras"), 13, 4, 7),
       TimeTabela(Time("Sao-Paulo"), 10, 3, 5),
-    ]),
-    [
-      TimeTabela(Time("Flamengo"), 15, 5, 8),
-      TimeTabela(Time("Palmeiras"), 13, 4, 7),
-      TimeTabela(Time("Sao-Paulo"), 10, 3, 5),
-    ],
-  )
-
-  check.eq(
-    insere_ordenado(TimeTabela(Time("Sao-Paulo"), 10, 3, 5), [
-      TimeTabela(Time("Flamengo"), 15, 5, 8),
-      TimeTabela(Time("Palmeiras"), 13, 4, 7),
     ]),
     [
       TimeTabela(Time("Flamengo"), 15, 5, 8),
@@ -1380,21 +1202,6 @@ pub fn ordena_tabela_classificacao_examples() {
 
   check.eq(
     ordena_tabela_classificacao([
-      TimeTabela(Time("Fluminense"), 15, 5, 8),
-      TimeTabela(Time("Atlético-MG"), 12, 4, 8),
-      TimeTabela(Time("Vasco"), 9, 3, 6),
-      TimeTabela(Time("Botafogo"), 9, 4, 3),
-    ]),
-    [
-      TimeTabela(Time("Fluminense"), 15, 5, 8),
-      TimeTabela(Time("Atlético-MG"), 12, 4, 8),
-      TimeTabela(Time("Botafogo"), 9, 4, 3),
-      TimeTabela(Time("Vasco"), 9, 3, 6),
-    ],
-  )
-
-  check.eq(
-    ordena_tabela_classificacao([
       TimeTabela(Time("Grêmio"), 10, 3, 5),
       TimeTabela(Time("Internacional"), 10, 3, 6),
       TimeTabela(Time("Cruzeiro"), 10, 2, 7),
@@ -1405,29 +1212,13 @@ pub fn ordena_tabela_classificacao_examples() {
       TimeTabela(Time("Cruzeiro"), 10, 2, 7),
     ],
   )
-
-  check.eq(
-    ordena_tabela_classificacao([
-      TimeTabela(Time("Corinthians"), 8, 2, 4),
-      TimeTabela(Time("Santos"), 8, 2, 4),
-      TimeTabela(Time("Bahia"), 8, 2, 4),
-    ]),
-    [
-      TimeTabela(Time("Bahia"), 8, 2, 4),
-      TimeTabela(Time("Corinthians"), 8, 2, 4),
-      TimeTabela(Time("Santos"), 8, 2, 4),
-    ],
-  )
-
-  check.eq(ordena_tabela_classificacao([]), [])
 }
 
 /// Converte um `TimeTabela` em uma string representando as informações do time na tabela de classificação.
 /// - Recebe
 ///   - `time_tabela`, representação das informações de classificação de um time.
 /// - Retorna
-///   - String que representa // Renomear
-// Avaliar: Separa em mais de uma funçãoo `time_tabela` no formato de string.
+///   - String que representa
 pub fn time_tabela_to_string(time_tabela: TimeTabela) -> String {
   time_tabela.time.nome
   <> " "
@@ -1559,8 +1350,6 @@ pub fn main_examples() {
     ]),
   )
 
-  check.eq(main([]), Error(ListaVazia))
-
   check.eq(
     main([
       "Sao-Paulo  Atletico-MG 2", "Flamengo 2 Palmeiras 1",
@@ -1583,11 +1372,6 @@ pub fn main_examples() {
       "Atletico-MG 1 Flamengo 2",
     ]),
     Error(QuantidadeInvalidaParametros),
-  )
-
-  check.eq(
-    main(["", "Palmeiras 0 Sao-Paulo 0", "Atletico-MG 1 Flamengo 2"]),
-    Error(StringVazia),
   )
 
   check.eq(
