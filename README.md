@@ -1,1 +1,0 @@
-Repositório com os códigos/notas de aula desenvolvidos durante a disciplina de Programação Funcional - 12026, no 2º semestre do 2º ano do curso de Ciência da Computação na Universidade Estadual de Maringá (UEM).
